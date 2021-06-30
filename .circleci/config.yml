@@ -1,0 +1,60 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:latest
+
+      - image: circleci/postgres:9.6.2-alpine
+        environment:
+          POSTGRES_USER: spring-boot-user
+          POSTGRES_DB: todo
+          POSTGRES_PASSWORD: spring1A#
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "build.gradle" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: gradle dependencies
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
+
+      - run:
+          name: Wait for DB
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+
+      # run tests!
+      - run:
+          name: Running test
+          command: gradle test
+
+      # Upload test coverage
+      - run:
+          name: Generate test coverage
+          command: gradle jacocoTestReport
+
+      # Upload test coverage
+      - run:
+          name: Upload test coverage
+          command: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
