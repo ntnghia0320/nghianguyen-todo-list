@@ -74,7 +74,6 @@ jobs: # a collection of steps
             ./gradlew check
             ./gradlew codeCoverageReport
 
-
       # Upload test coverage
       - run:
           name: Upload test coverage
