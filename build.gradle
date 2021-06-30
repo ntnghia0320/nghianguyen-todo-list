@@ -14,23 +14,17 @@ repositories {
 	mavenCentral()
 }
 
-subprojects {
-	dependencies {
-		implementation 'org.springframework.boot:spring-boot-starter-web'
-		testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	}
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
 
-	test {
-		useJUnitPlatform()
-	}
+test {
+	useJUnitPlatform()
 }
 
 task codeCoverageReport(type: JacocoReport) {
 	executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
-
-	subprojects.each {
-		sourceSets it.sourceSets.main
-	}
 
 	reports {
 		xml.enabled true
@@ -41,5 +35,5 @@ task codeCoverageReport(type: JacocoReport) {
 }
 
 codeCoverageReport.dependsOn {
-	subprojects*.test
+	test
 }
