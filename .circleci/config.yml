@@ -77,9 +77,7 @@ jobs: # a collection of steps
       # Upload test coverage
       - run:
           name: Upload test coverage
-          command: |
-            if [ -e ./gradlew ]; then ./gradlew jacocoTestReport;else gradle jacocoTestReport;fi
-            bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+          command: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
 workflows:
   version: 2
