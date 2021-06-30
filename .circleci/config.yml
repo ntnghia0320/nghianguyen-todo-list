@@ -72,7 +72,7 @@ jobs: # a collection of steps
           name: Generate test coverage
           command: |
             ./gradlew check
-            ./gradlew codeCoverageReport
+            ./gradlew jacocoTestReport
 
       # Upload test coverage
       - run:
