@@ -70,7 +70,10 @@ jobs: # a collection of steps
       # Upload test coverage
       - run:
           name: Generate test coverage
-          command: ./gradlew codeCoverageReport
+          command: |
+            ./gradlew check
+            ./gradlew codeCoverageReport
+
 
       # Upload test coverage
       - run:
