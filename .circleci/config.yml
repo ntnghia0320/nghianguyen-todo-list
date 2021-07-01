@@ -34,7 +34,7 @@ jobs: # a collection of steps
       - run:
           name: Install MySQL CLI; Import dummy data; run an example query
           command: |
-            dockerize -wait sudo su apt-get update && apt-get install -y mysql-client
+            sudo su apt-get update && apt-get install -y defalut-mysql-client
             mysql -h 127.0.0.1 -u user -ppassw0rd --execute="SELECT * FROM information_schema.tables"
 
       # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
