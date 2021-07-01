@@ -1,6 +1,7 @@
 package com.ntnghia.todo.models;
 
 import lombok.Data;
+
 import javax.persistence.*;
 
 @Data
@@ -14,4 +15,12 @@ public class Todo {
 
     @Column(name = "content")
     private String content;
+
+    public Todo(int id, String content) {
+        this.id = id;
+        this.content = content;
+    }
+
+    public Todo() {
+    }
 }
