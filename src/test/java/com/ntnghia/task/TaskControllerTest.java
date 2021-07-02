@@ -17,9 +17,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -81,7 +78,7 @@ public class TaskControllerTest {
 
     @Test
     public void test_getById_NotFound() throws Exception {
-        mockMvc.perform(get("/api/tasks/21"))
+        mockMvc.perform(get("/api/tasks/999"))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
@@ -104,27 +101,64 @@ public class TaskControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Nested
+    class TestPost {
+        Task task = new Task(0, "do homework", "do exercise");
+
+        @Test
+        public void test_post() throws Exception {
+            Gson gson = new Gson();
+            String json = gson.toJson(task);
+
+            mockMvc.perform(post("/api/tasks/")
+                    .content(json)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.title", Matchers.equalTo("do homework")))
+                    .andExpect(jsonPath("$.description", Matchers.equalTo("do exercise")));
+        }
+
+        @AfterEach
+        public void afterEach() {
+            taskServiceImpl.deleteTask(taskServiceImpl.findByTitle("do homework").getId());
+        }
+    }
+
     @Test
     public void test_put_Found() throws Exception {
-
         Gson gson = new Gson();
         String json = gson.toJson(new Task(task1.getId(), "learn math", "learn sum sub"));
-        System.out.print(json);
-        mockMvc.perform(put("/api/tasks")
+
+        mockMvc.perform(put("/api/tasks/" + task1.getId())
                 .content(json)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", Matchers.equalTo(task1.getId())))
+                .andExpect(jsonPath("$.title", Matchers.equalTo("learn math")))
+                .andExpect(jsonPath("$.description", Matchers.equalTo("learn sum sub")));
+    }
 
-        Optional<Task> task = taskServiceImpl.findById(task1.getId());
+    @Test
+    public void test_put_NotFound() throws Exception {
+        Gson gson = new Gson();
+        String json = gson.toJson(new Task(task1.getId(), "learn math", "learn sum sub"));
 
-        assertTrue(task.isPresent());
-        assertEquals("learn math", task.get().getTitle());
-        assertEquals("learn sum sub", task.get().getDescription());
+        mockMvc.perform(put("/api/tasks/" + 99999)
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isNotFound());
     }
 
     @Nested
-    class test_delete {
+    class TestDelete {
         Task taskToDelete;
 
         @BeforeEach

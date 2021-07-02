@@ -3,16 +3,17 @@ package com.ntnghia.task.service;
 import com.ntnghia.task.entity.Task;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface TaskService {
     List<Task> getAll();
 
-    void saveTask(Task task);
+    Task saveTask(Task task);
 
-    void deleteTask(int id);
+    Task updateTask(int id, Task task);
 
-    Optional<Task> findById(int id);
+    int deleteTask(int id);
 
-    Optional<Task> findByTitle(String title);
+    Task findById(int id);
+
+    Task findByTitle(String title);
 }

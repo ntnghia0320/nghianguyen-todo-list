@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -21,39 +20,45 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Optional<Task> findById(int id) {
-        Optional<Task> optionalTask = taskRepository.findById(id);
-
-        if (optionalTask.isPresent()) {
-            return optionalTask;
+    public Task findById(int id) {
+        if (taskRepository.findById(id).isPresent()) {
+            return taskRepository.findById(id).get();
         }
 
         throw new NotFoundException(String.format("Task id %d not found", id));
     }
 
     @Override
-    public Optional<Task> findByTitle(String title) {
-        Optional<Task> optionalTask = taskRepository.findByTitle(title);
-
-        if (optionalTask.isPresent()) {
-            return optionalTask;
+    public Task findByTitle(String title) {
+        if (taskRepository.findByTitle(title) != null) {
+            return taskRepository.findByTitle(title);
         }
 
         throw new NotFoundException(String.format("Task title %s not found", title));
     }
 
     @Override
-    public void saveTask(Task task) {
-        taskRepository.save(task);
+    public Task saveTask(Task task) {
+        return taskRepository.save(task);
     }
 
     @Override
-    public void deleteTask(int id) {
+    public Task updateTask(int id, Task task) {
+        if (!taskRepository.existsById(id)) {
+            throw new NotFoundException(String.format("Task id %d not found", id));
+        }
+
+        return taskRepository.save(task);
+    }
+
+    @Override
+    public int deleteTask(int id) {
         if (!taskRepository.existsById(id)) {
             throw new NotFoundException(String.format("Task id %d not found", id));
         }
 
         taskRepository.deleteById(id);
+        return id;
     }
 
 }

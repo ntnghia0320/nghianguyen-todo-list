@@ -5,8 +5,11 @@ import com.ntnghia.task.exception.NotFoundException;
 import com.ntnghia.task.repository.TaskRepository;
 import com.ntnghia.task.service.TaskService;
 import com.ntnghia.task.service.impl.TaskServiceImpl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -22,7 +25,10 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -42,27 +48,37 @@ public class TaskServiceImplTest {
     private TaskServiceImpl taskServiceImpl;
 
     @MockBean
-    private TaskRepository taskRepository;
+    private TaskRepository taskRepositoryMock;
 
-    Task taskExpected;
-    List<Task> taskListExpected;
-    TaskServiceImpl taskServiceImplMock;
+    private Task taskExpected;
+    private Task taskToUpdate;
+    private List<Task> taskListExpected;
 
     @BeforeEach
-    public void setUp() {
+    public void beforeEach() {
         taskExpected = new Task(0, "learn english", "learn word");
+        taskToUpdate = new Task(0, "learn not_thing", "do not_thing");
         taskListExpected = new ArrayList<>(Collections.singletonList(taskExpected));
 
-        Mockito.when(taskRepository.findByTitle(taskExpected.getTitle()))
-                .thenReturn(java.util.Optional.of(taskExpected));
-
-        Mockito.when(taskRepository.findAll())
+        Mockito.when(taskRepositoryMock.findAll())
                 .thenReturn(taskListExpected);
 
-        Mockito.when(taskRepository.findById(taskExpected.getId()))
+        Mockito.when(taskRepositoryMock.findById(eq(taskExpected.getId())))
                 .thenReturn(java.util.Optional.of(taskExpected));
 
-        taskServiceImplMock = mock(TaskServiceImpl.class);
+        Mockito.when(taskRepositoryMock.findByTitle(eq(taskExpected.getTitle())))
+                .thenReturn(taskExpected);
+
+        Mockito.when(taskRepositoryMock.save(eq(taskExpected)))
+                .thenReturn(taskExpected);
+
+        Mockito.when(taskRepositoryMock.save(eq(taskToUpdate)))
+                .thenReturn(taskToUpdate);
+
+        Mockito.when(taskRepositoryMock.existsById(eq(taskExpected.getId())))
+                .thenReturn(true);
+
+        doNothing().when(taskRepositoryMock).deleteById(eq(taskExpected.getId()));
     }
 
     @Test
@@ -74,20 +90,18 @@ public class TaskServiceImplTest {
 
     @Test
     public void test_findById() {
-        int id = taskExpected.getId();
-        Optional<Task> taskFound = taskServiceImpl.findById(id);
+        Task taskFound = taskServiceImpl.findById(taskExpected.getId());
 
-        assertThat(taskFound.get()).isEqualTo(taskExpected);
+        assertThat(taskFound).isEqualTo(taskExpected);
     }
 
     @Test
     public void test_findById_Throw_Exception() {
-        int id = taskExpected.getId() + 9879;
-        String message = String.format("Task id %d not found", id);
+        String message = String.format("Task id %d not found", 99999);
 
         NotFoundException thrown = assertThrows(
                 NotFoundException.class,
-                () -> taskServiceImpl.findById(id),
+                () -> taskServiceImpl.findById(99999),
                 message
         );
 
@@ -97,9 +111,9 @@ public class TaskServiceImplTest {
     @Test
     public void test_findByTitle() {
         String title = "learn english";
-        Optional<Task> taskFound = taskServiceImpl.findByTitle(title);
+        Task taskFound = taskServiceImpl.findByTitle(title);
 
-        assertThat(taskFound.get()).isEqualTo(taskExpected);
+        assertThat(taskFound).isEqualTo(taskExpected);
     }
 
     @Test
@@ -118,11 +132,51 @@ public class TaskServiceImplTest {
 
     @Test
     public void test_saveTask() {
-        verify(taskServiceImplMock, times(0)).saveTask(taskExpected);
+        Task taskSaved = taskServiceImpl.saveTask(taskExpected);
+
+        assertEquals(taskExpected, taskSaved);
+    }
+
+    @Test
+    public void test_updateTask() {
+        int idTaskToUpdate = taskToUpdate.getId();
+        Task taskUpdated = taskServiceImpl.updateTask(idTaskToUpdate, taskToUpdate);
+
+        assertEquals(taskToUpdate, taskUpdated);
+    }
+
+    @Test
+    public void test_updateTask_Throw_Exception() {
+        String message = String.format("Task id %d not found", 9876);
+
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
+                () -> taskServiceImpl.updateTask(9876, taskToUpdate),
+                message
+        );
+
+        assertTrue(thrown.getMessage().contains(message));
     }
 
     @Test
     public void test_deleteTask() {
-        verify(taskServiceImplMock, times(0)).deleteTask(taskExpected.getId());
+        int idTaskToDelete = taskExpected.getId();
+        int idTaskDeleted = taskServiceImpl.deleteTask(idTaskToDelete);
+
+        assertEquals(idTaskToDelete, idTaskDeleted);
     }
+
+    @Test
+    public void test_deleteTask_Throw_Exception() {
+        String message = String.format("Task id %d not found", 9876);
+
+        NotFoundException thrown = assertThrows(
+                NotFoundException.class,
+                () -> taskServiceImpl.deleteTask(9876),
+                message
+        );
+
+        assertTrue(thrown.getMessage().contains(message));
+    }
+
 }
