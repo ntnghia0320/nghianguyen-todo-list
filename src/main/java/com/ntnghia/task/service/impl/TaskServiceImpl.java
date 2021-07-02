@@ -44,7 +44,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void saveTask(Task task) {
-        task.setId(0);
         taskRepository.save(task);
     }
 
