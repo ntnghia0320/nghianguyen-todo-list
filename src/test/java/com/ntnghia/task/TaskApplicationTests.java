@@ -1,8 +1,7 @@
-package com.ntnghia.todo;
+package com.ntnghia.task;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
@@ -10,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @TestPropertySource(locations = "classpath:application-test.properties")
-class TodoApplicationTests {
+class TaskApplicationTests {
 
     @Value("${spring.datasource.url}")
     private String dataSourceUrl;
@@ -21,7 +20,7 @@ class TodoApplicationTests {
 
     @Test
     public void test_dataSourceUrl() {
-        assertEquals(dataSourceUrl, "jdbc:mysql://localhost:3306/todo_test");
+        assertEquals(dataSourceUrl, "jdbc:mysql://localhost:3306/task_test");
     }
 
 }

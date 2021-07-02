@@ -1,4 +1,4 @@
-package com.ntnghia.todo;
+package com.ntnghia.task;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

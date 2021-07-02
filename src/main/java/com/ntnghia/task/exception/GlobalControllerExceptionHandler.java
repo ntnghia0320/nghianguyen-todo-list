@@ -1,4 +1,4 @@
-package com.ntnghia.todo.exceptions;
+package com.ntnghia.task.exception;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
