@@ -15,5 +15,5 @@ public interface TaskService {
 
     Task findById(int id);
 
-    Task findByTitle(String title);
+    Task findByKeyWord(String keyWord);
 }

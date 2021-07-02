@@ -24,9 +24,9 @@ public class TaskController {
         return taskService.findById(id);
     }
 
-    @GetMapping("/title/{title}")
-    Task getByTitle(@PathVariable String title) {
-        return taskService.findByTitle(title);
+    @GetMapping("/key-word/{keyWord}")
+    Task getByKeyWord(@PathVariable String keyWord) {
+        return taskService.findByKeyWord(keyWord);
     }
 
     @PostMapping()

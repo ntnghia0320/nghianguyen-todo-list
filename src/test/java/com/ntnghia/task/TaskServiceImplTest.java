@@ -5,11 +5,8 @@ import com.ntnghia.task.exception.NotFoundException;
 import com.ntnghia.task.repository.TaskRepository;
 import com.ntnghia.task.service.TaskService;
 import com.ntnghia.task.service.impl.TaskServiceImpl;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -25,9 +22,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 
 @SpringBootTest
@@ -66,7 +61,7 @@ public class TaskServiceImplTest {
         Mockito.when(taskRepositoryMock.findById(eq(taskExpected.getId())))
                 .thenReturn(java.util.Optional.of(taskExpected));
 
-        Mockito.when(taskRepositoryMock.findByTitle(eq(taskExpected.getTitle())))
+        Mockito.when(taskRepositoryMock.findByKeyWord(eq(taskExpected.getTitle())))
                 .thenReturn(taskExpected);
 
         Mockito.when(taskRepositoryMock.save(eq(taskExpected)))
@@ -109,21 +104,21 @@ public class TaskServiceImplTest {
     }
 
     @Test
-    public void test_findByTitle() {
+    public void test_findByKeyWord() {
         String title = "learn english";
-        Task taskFound = taskServiceImpl.findByTitle(title);
+        Task taskFound = taskServiceImpl.findByKeyWord(title);
 
         assertThat(taskFound).isEqualTo(taskExpected);
     }
 
     @Test
-    public void test_findByTitle_Throw_Exception() {
-        String title = "learn english not found";
-        String message = String.format("Task title %s not found", title);
+    public void test_findByKeyWord_Throw_Exception() {
+        String title = "XXXas";
+        String message = String.format("Task key word %s not found", title);
 
         NotFoundException thrown = assertThrows(
                 NotFoundException.class,
-                () -> taskServiceImpl.findByTitle(title),
+                () -> taskServiceImpl.findByKeyWord(title),
                 message
         );
 

@@ -84,8 +84,8 @@ public class TaskControllerTest {
     }
 
     @Test
-    public void test_getByTitle_Found() throws Exception {
-        mockMvc.perform(get("/api/tasks/title/" + task2.getTitle()))
+    public void test_getByKeyWord_Found() throws Exception {
+        mockMvc.perform(get("/api/tasks/key-word/" + task2.getTitle()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -95,8 +95,8 @@ public class TaskControllerTest {
     }
 
     @Test
-    public void test_getByTitle_NotFound() throws Exception {
-        mockMvc.perform(get("/api/tasks/title/title_not_exist"))
+    public void test_getByKeyWord_NotFound() throws Exception {
+        mockMvc.perform(get("/api/tasks/key-word/XXXXgsa"))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
@@ -123,7 +123,7 @@ public class TaskControllerTest {
 
         @AfterEach
         public void afterEach() {
-            taskServiceImpl.deleteTask(taskServiceImpl.findByTitle("do homework").getId());
+            taskServiceImpl.deleteTask(taskServiceImpl.findByKeyWord("do homework").getId());
         }
     }
 

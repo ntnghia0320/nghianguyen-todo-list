@@ -26,11 +26,11 @@ public class TaskRepositoryTest {
     }
 
     @Test
-    public void test_findByTitle() {
+    public void test_findByKeyWord() {
         taskRepository.save(task);
 
-        assertNotNull(taskRepository.findByTitle("learn java framework"));
-        assertNull(taskRepository.findByTitle("title abc"));
+        assertNotNull(taskRepository.findByKeyWord("learn java"));
+        assertNull(taskRepository.findByKeyWord("xxxxbc"));
     }
 
     @AfterEach
