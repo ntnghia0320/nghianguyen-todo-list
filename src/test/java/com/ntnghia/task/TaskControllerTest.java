@@ -84,21 +84,27 @@ public class TaskControllerTest {
     }
 
     @Test
-    public void test_getByKeyWord_Found() throws Exception {
-        mockMvc.perform(get("/api/tasks/key-word/" + task2.getTitle()))
+    public void test_getByKeyword_Found() throws Exception {
+        mockMvc.perform(get("/api/tasks/keyword?keyword=learn"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", Matchers.equalTo(task2.getId())))
-                .andExpect(jsonPath("$.title", Matchers.equalTo(task2.getTitle())))
-                .andExpect(jsonPath("$.description", Matchers.equalTo(task2.getDescription())));
+                .andExpect(jsonPath("$", Matchers.hasSize(2)))
+                .andExpect(jsonPath("$[0].id", Matchers.equalTo(task1.getId())))
+                .andExpect(jsonPath("$[0].title", Matchers.equalTo("learn java framework")))
+                .andExpect(jsonPath("$[0].description", Matchers.equalTo("learn java spring")))
+                .andExpect(jsonPath("$[1].id", Matchers.equalTo(task2.getId())))
+                .andExpect(jsonPath("$[1].title", Matchers.equalTo("learn english")))
+                .andExpect(jsonPath("$[1].description", Matchers.equalTo("learn english word")));
     }
 
     @Test
-    public void test_getByKeyWord_NotFound() throws Exception {
-        mockMvc.perform(get("/api/tasks/key-word/XXXXgsa"))
+    public void test_getByKeyword_NotFound() throws Exception {
+        mockMvc.perform(get("/api/tasks/keyword?keyword=not_exist"))
                 .andDo(print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", Matchers.hasSize(0)));
     }
 
     @Nested
@@ -123,7 +129,7 @@ public class TaskControllerTest {
 
         @AfterEach
         public void afterEach() {
-            taskServiceImpl.deleteTask(taskServiceImpl.findByKeyWord("do homework").getId());
+            taskServiceImpl.deleteTask(taskServiceImpl.findByKeyword("do homework").get(0).getId());
         }
     }
 
@@ -163,14 +169,18 @@ public class TaskControllerTest {
 
         @BeforeEach
         public void beforeEach() {
-            taskToDelete = new Task(0, "learn math", "sum syb");
+            taskToDelete = new Task(0, "task to delete", "not thing");
             taskServiceImpl.saveTask(taskToDelete);
+            taskToDelete.setId(taskServiceImpl.findByKeyword("task to delete").get(0).getId());
         }
 
         @Test
         public void test_delete_Found() throws Exception {
             mockMvc.perform(delete("/api/tasks/" + taskToDelete.getId()))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isOk())
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(String.valueOf(taskToDelete.getId())));
         }
 
         @Test

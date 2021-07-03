@@ -47,22 +47,22 @@ public class TaskServiceImplTest {
 
     private Task taskExpected;
     private Task taskToUpdate;
-    private List<Task> taskListExpected;
+    private List<Task> listTaskExpected;
 
     @BeforeEach
     public void beforeEach() {
         taskExpected = new Task(0, "learn english", "learn word");
         taskToUpdate = new Task(0, "learn not_thing", "do not_thing");
-        taskListExpected = new ArrayList<>(Collections.singletonList(taskExpected));
+        listTaskExpected = new ArrayList<>(Collections.singletonList(taskExpected));
 
         Mockito.when(taskRepositoryMock.findAll())
-                .thenReturn(taskListExpected);
+                .thenReturn(listTaskExpected);
 
         Mockito.when(taskRepositoryMock.findById(eq(taskExpected.getId())))
                 .thenReturn(java.util.Optional.of(taskExpected));
 
-        Mockito.when(taskRepositoryMock.findByKeyWord(eq(taskExpected.getTitle())))
-                .thenReturn(taskExpected);
+        Mockito.when(taskRepositoryMock.findByKeyword(eq(taskExpected.getTitle())))
+                .thenReturn(listTaskExpected);
 
         Mockito.when(taskRepositoryMock.save(eq(taskExpected)))
                 .thenReturn(taskExpected);
@@ -80,7 +80,7 @@ public class TaskServiceImplTest {
     public void test_getAll() {
         List<Task> taskListActual = taskServiceImpl.getAll();
 
-        assertEquals(taskListExpected, taskListActual);
+        assertEquals(listTaskExpected, taskListActual);
     }
 
     @Test
@@ -104,25 +104,19 @@ public class TaskServiceImplTest {
     }
 
     @Test
-    public void test_findByKeyWord() {
+    public void test_findByKeyword() {
         String title = "learn english";
-        Task taskFound = taskServiceImpl.findByKeyWord(title);
+        List<Task> listTaskFound = taskServiceImpl.findByKeyword(title);
 
-        assertThat(taskFound).isEqualTo(taskExpected);
+        assertThat(listTaskFound).isEqualTo(listTaskExpected);
     }
 
     @Test
-    public void test_findByKeyWord_Throw_Exception() {
-        String title = "XXXas";
-        String message = String.format("Task key word %s not found", title);
+    public void test_findByKeyword_NotFound() {
+        String title = "not_exist";
+        List<Task> listTaskFound = taskServiceImpl.findByKeyword(title);
 
-        NotFoundException thrown = assertThrows(
-                NotFoundException.class,
-                () -> taskServiceImpl.findByKeyWord(title),
-                message
-        );
-
-        assertTrue(thrown.getMessage().contains(message));
+        assertThat(listTaskFound).isEmpty();
     }
 
     @Test

@@ -29,12 +29,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task findByKeyWord(String keyWord) {
-        if (taskRepository.findByKeyWord(keyWord) != null) {
-            return taskRepository.findByKeyWord(keyWord);
-        }
-
-        throw new NotFoundException(String.format("Task key word %s not found", keyWord));
+    public List<Task> findByKeyword(String keyword) {
+            return taskRepository.findByKeyword(keyword);
     }
 
     @Override
