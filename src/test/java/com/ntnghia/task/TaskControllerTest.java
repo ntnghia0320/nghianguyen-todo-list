@@ -41,47 +41,46 @@ public class TaskControllerTest {
     private int idExist;
     private int idNotExist;
     private String messageIdNotExist;
+    private Task taskReturnExpected;
+    private List<Task> listTaskReturnExpected;
 
     @BeforeEach
     public void beforeEach() {
         idExist = 2;
         idNotExist = 999;
         messageIdNotExist = "Task id 999 not found";
+        taskReturnExpected = new Task(0, "learn english", "learn word");
+        listTaskReturnExpected = new ArrayList<>(Collections.singletonList(taskReturnExpected));
     }
 
     @Test
     public void test_getAll() throws Exception {
-        Task task = new Task(0, "learn english", "learn word");
-        List<Task> listTaskReturn = new ArrayList<>(Collections.singletonList(task));
-
-        when(taskService.getAll()).thenReturn(listTaskReturn);
+        when(taskService.getAll()).thenReturn(listTaskReturnExpected);
 
         mockMvc.perform(get("/api/tasks"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$[0].id", Matchers.equalTo(listTaskReturn.get(0).getId())))
-                .andExpect(jsonPath("$[0].title", Matchers.equalTo(listTaskReturn.get(0).getTitle())))
+                .andExpect(jsonPath("$[0].id", Matchers.equalTo(listTaskReturnExpected.get(0).getId())))
+                .andExpect(jsonPath("$[0].title", Matchers.equalTo(listTaskReturnExpected.get(0).getTitle())))
                 .andExpect(jsonPath(
                         "$[0].description",
-                        Matchers.equalTo(listTaskReturn.get(0).getDescription())
+                        Matchers.equalTo(listTaskReturnExpected.get(0).getDescription())
                 ));
     }
 
     @Test
     public void test_getById_Found() throws Exception {
-        Task taskFoundById = Task.builder().id(2).title("do homework").description("do exercise").build();
-
-        when(taskService.findById(idExist)).thenReturn(taskFoundById);
+        when(taskService.findById(idExist)).thenReturn(taskReturnExpected);
 
         mockMvc.perform(get("/api/tasks/" + idExist))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", Matchers.equalTo(taskFoundById.getId())))
-                .andExpect(jsonPath("$.title", Matchers.equalTo(taskFoundById.getTitle())))
-                .andExpect(jsonPath("$.description", Matchers.equalTo(taskFoundById.getDescription())));
+                .andExpect(jsonPath("$.id", Matchers.equalTo(taskReturnExpected.getId())))
+                .andExpect(jsonPath("$.title", Matchers.equalTo(taskReturnExpected.getTitle())))
+                .andExpect(jsonPath("$.description", Matchers.equalTo(taskReturnExpected.getDescription())));
     }
 
     @Test
@@ -97,21 +96,19 @@ public class TaskControllerTest {
     @Test
     public void test_getByKeyword_Found() throws Exception {
         String keywordExist = "learn";
-        Task task = new Task(0, "learn english", "learn word");
-        List<Task> listTaskExistKeyword = new ArrayList<>(Collections.singletonList(task));
 
-        when(taskService.findByKeyword(keywordExist)).thenReturn(listTaskExistKeyword);
+        when(taskService.findByKeyword(keywordExist)).thenReturn(listTaskReturnExpected);
 
-        mockMvc.perform(get("/api/tasks/keyword?keyword=" + keywordExist))
+        mockMvc.perform(get("/api/tasks/search?keyword=" + keywordExist))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$[0].id", Matchers.equalTo(listTaskExistKeyword.get(0).getId())))
-                .andExpect(jsonPath("$[0].title", Matchers.equalTo(listTaskExistKeyword.get(0).getTitle())))
+                .andExpect(jsonPath("$[0].id", Matchers.equalTo(listTaskReturnExpected.get(0).getId())))
+                .andExpect(jsonPath("$[0].title", Matchers.equalTo(listTaskReturnExpected.get(0).getTitle())))
                 .andExpect(
                         jsonPath("$[0].description",
-                                Matchers.equalTo(listTaskExistKeyword.get(0).getDescription()))
+                                Matchers.equalTo(listTaskReturnExpected.get(0).getDescription()))
                 );
     }
 
@@ -122,7 +119,7 @@ public class TaskControllerTest {
 
         when(taskService.findByKeyword(keywordNotExist)).thenReturn(emptyList);
 
-        mockMvc.perform(get("/api/tasks/keyword?keyword=" + keywordNotExist))
+        mockMvc.perform(get("/api/tasks/search?keyword=" + keywordNotExist))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", Matchers.hasSize(0)));
@@ -130,10 +127,9 @@ public class TaskControllerTest {
 
     @Test
     public void test_post() throws Exception {
-        Task taskToPost = Task.builder().title("do homework").description("do exercise").build();
-        Task taskReturn = Task.builder().id(2).title("do homework").description("do exercise").build();
+        Task taskToPost = Task.builder().title("learn english").description("learn word").build();
 
-        when(taskService.saveTask(taskToPost)).thenReturn(taskReturn);
+        when(taskService.saveTask(taskToPost)).thenReturn(taskReturnExpected);
 
         Gson gson = new Gson();
         String json = gson.toJson(taskToPost);
@@ -145,17 +141,16 @@ public class TaskControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", Matchers.equalTo(taskReturn.getId())))
-                .andExpect(jsonPath("$.title", Matchers.equalTo(taskReturn.getTitle())))
-                .andExpect(jsonPath("$.description", Matchers.equalTo(taskReturn.getDescription())));
+                .andExpect(jsonPath("$.id", Matchers.equalTo(taskReturnExpected.getId())))
+                .andExpect(jsonPath("$.title", Matchers.equalTo(taskReturnExpected.getTitle())))
+                .andExpect(jsonPath("$.description", Matchers.equalTo(taskReturnExpected.getDescription())));
     }
 
     @Test
     public void test_put_Found() throws Exception {
-        Task taskToPut = Task.builder().title("do homework").description("do exercise").build();
-        Task taskReturn = Task.builder().id(2).title("do homework").description("do exercise").build();
+        Task taskToPut = Task.builder().title("learn english").description("learn word").build();
 
-        when(taskService.updateTask(idExist, taskToPut)).thenReturn(taskReturn);
+        when(taskService.updateTask(idExist, taskToPut)).thenReturn(taskReturnExpected);
 
         Gson gson = new Gson();
         String json = gson.toJson(taskToPut);
@@ -167,14 +162,14 @@ public class TaskControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", Matchers.equalTo(taskReturn.getId())))
-                .andExpect(jsonPath("$.title", Matchers.equalTo(taskReturn.getTitle())))
-                .andExpect(jsonPath("$.description", Matchers.equalTo(taskReturn.getDescription())));
+                .andExpect(jsonPath("$.id", Matchers.equalTo(taskReturnExpected.getId())))
+                .andExpect(jsonPath("$.title", Matchers.equalTo(taskReturnExpected.getTitle())))
+                .andExpect(jsonPath("$.description", Matchers.equalTo(taskReturnExpected.getDescription())));
     }
 
     @Test
     public void test_put_NotFound() throws Exception {
-        Task taskToPut = Task.builder().title("do homework").description("do exercise").build();
+        Task taskToPut = Task.builder().title("learn english").description("learn word").build();
 
         when(taskService.updateTask(idNotExist, taskToPut)).thenThrow(new NotFoundException(messageIdNotExist));
 

@@ -24,7 +24,7 @@ public class TaskController {
         return taskService.findById(id);
     }
 
-    @GetMapping("/keyword")
+    @GetMapping("/search")
     List<Task> getByKeyword(@RequestParam String keyword) {
         return taskService.findByKeyword(keyword);
     }
