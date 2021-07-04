@@ -21,16 +21,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task findById(int id) {
-        if (taskRepository.findById(id).isPresent()) {
-            return taskRepository.findById(id).get();
-        }
+        if (taskRepository.findById(id).isPresent()) return taskRepository.findById(id).get();
 
         throw new NotFoundException(String.format("Task id %d not found", id));
     }
 
     @Override
     public List<Task> findByKeyword(String keyword) {
-            return taskRepository.findByKeyword(keyword);
+        return taskRepository.findByKeyword(keyword);
     }
 
     @Override
@@ -40,21 +38,22 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task updateTask(int id, Task task) {
-        if (!taskRepository.existsById(id)) {
-            throw new NotFoundException(String.format("Task id %d not found", id));
+        if (taskRepository.existsById(id)){
+            task.setId(id);
+            return taskRepository.save(task);
         }
 
-        return taskRepository.save(task);
+        throw new NotFoundException(String.format("Task id %d not found", id));
     }
 
     @Override
     public int deleteTask(int id) {
-        if (!taskRepository.existsById(id)) {
-            throw new NotFoundException(String.format("Task id %d not found", id));
+        if (taskRepository.existsById(id)) {
+            taskRepository.deleteById(id);
+            return id;
         }
 
-        taskRepository.deleteById(id);
-        return id;
+        throw new NotFoundException(String.format("Task id %d not found", id));
     }
 
 }

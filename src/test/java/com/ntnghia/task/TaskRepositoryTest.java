@@ -9,8 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @TestPropertySource(locations = "classpath:application-test.properties")
@@ -22,15 +21,15 @@ public class TaskRepositoryTest {
 
     @BeforeEach
     public void beforeEach() {
-        task = new Task(0, "learn java framework", "learn java spring");
+        task = Task.builder().title("learn english").description("learn english word").build();
     }
 
     @Test
     public void test_findByKeyword() {
-        taskRepository.save(task);
+        task = taskRepository.save(task);
 
-        assertNotNull(taskRepository.findByKeyword("learn java"));
-        assertNull(taskRepository.findByKeyword("xxxxbc"));
+        assertNotNull(taskRepository.findById(task.getId()));
+        assertTrue(taskRepository.findByKeyword("xxxxbc").isEmpty());
     }
 
     @AfterEach

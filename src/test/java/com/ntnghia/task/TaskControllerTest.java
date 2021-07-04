@@ -2,192 +2,214 @@ package com.ntnghia.task;
 
 import com.google.gson.Gson;
 import com.ntnghia.task.entity.Task;
-import com.ntnghia.task.service.impl.TaskServiceImpl;
+import com.ntnghia.task.exception.NotFoundException;
+import com.ntnghia.task.service.TaskService;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
-@WebAppConfiguration
 @EnableAutoConfiguration(exclude = {org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration.class})
 @TestPropertySource(locations = "classpath:application-test.properties")
+@AutoConfigureMockMvc
 public class TaskControllerTest {
-    @Autowired
-    private TaskServiceImpl taskServiceImpl;
-
-    private Task task1;
-    private Task task2;
+    @MockBean
+    private TaskService taskService;
 
     @Autowired
     private MockMvc mockMvc;
 
-    @BeforeEach
-    public void init() {
-        task1 = new Task(0, "learn java framework", "learn java spring");
-        task2 = new Task(0, "learn english", "learn english word");
-        taskServiceImpl.saveTask(task1);
-        taskServiceImpl.saveTask(task2);
-    }
+    private int idExist;
+    private int idNotExist;
+    private String messageIdNotExist;
 
-    @AfterEach
-    public void destroy() {
-        taskServiceImpl.deleteTask(task1.getId());
-        taskServiceImpl.deleteTask(task2.getId());
+    @BeforeEach
+    public void beforeEach() {
+        idExist = 2;
+        idNotExist = 999;
+        messageIdNotExist = "Task id 999 not found";
     }
 
     @Test
     public void test_getAll() throws Exception {
+        Task task = new Task(0, "learn english", "learn word");
+        List<Task> listTaskReturn = new ArrayList<>(Collections.singletonList(task));
+
+        when(taskService.getAll()).thenReturn(listTaskReturn);
+
         mockMvc.perform(get("/api/tasks"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", Matchers.hasSize(2)))
-                .andExpect(jsonPath("$[0].id", Matchers.equalTo(task1.getId())))
-                .andExpect(jsonPath("$[0].title", Matchers.equalTo("learn java framework")))
-                .andExpect(jsonPath("$[0].description", Matchers.equalTo("learn java spring")))
-                .andExpect(jsonPath("$[1].id", Matchers.equalTo(task2.getId())))
-                .andExpect(jsonPath("$[1].title", Matchers.equalTo("learn english")))
-                .andExpect(jsonPath("$[1].description", Matchers.equalTo("learn english word")));
+                .andExpect(jsonPath("$", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$[0].id", Matchers.equalTo(listTaskReturn.get(0).getId())))
+                .andExpect(jsonPath("$[0].title", Matchers.equalTo(listTaskReturn.get(0).getTitle())))
+                .andExpect(jsonPath(
+                        "$[0].description",
+                        Matchers.equalTo(listTaskReturn.get(0).getDescription())
+                ));
     }
 
     @Test
     public void test_getById_Found() throws Exception {
-        mockMvc.perform(get("/api/tasks/" + task1.getId()))
+        Task taskFoundById = Task.builder().id(2).title("do homework").description("do exercise").build();
+
+        when(taskService.findById(idExist)).thenReturn(taskFoundById);
+
+        mockMvc.perform(get("/api/tasks/" + idExist))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", Matchers.equalTo(task1.getId())))
-                .andExpect(jsonPath("$.title", Matchers.equalTo(task1.getTitle())))
-                .andExpect(jsonPath("$.description", Matchers.equalTo(task1.getDescription())));
+                .andExpect(jsonPath("$.id", Matchers.equalTo(taskFoundById.getId())))
+                .andExpect(jsonPath("$.title", Matchers.equalTo(taskFoundById.getTitle())))
+                .andExpect(jsonPath("$.description", Matchers.equalTo(taskFoundById.getDescription())));
     }
 
     @Test
     public void test_getById_NotFound() throws Exception {
-        mockMvc.perform(get("/api/tasks/999"))
-                .andDo(print())
-                .andExpect(status().isNotFound());
+        when(taskService.findById(idNotExist)).thenThrow(new NotFoundException(messageIdNotExist));
+
+        mockMvc.perform(get("/api/tasks/" + idNotExist))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NotFoundException))
+                .andExpect(result -> assertEquals(messageIdNotExist, result.getResolvedException().getMessage()));
     }
 
     @Test
     public void test_getByKeyword_Found() throws Exception {
-        mockMvc.perform(get("/api/tasks/keyword?keyword=learn"))
+        String keywordExist = "learn";
+        Task task = new Task(0, "learn english", "learn word");
+        List<Task> listTaskExistKeyword = new ArrayList<>(Collections.singletonList(task));
+
+        when(taskService.findByKeyword(keywordExist)).thenReturn(listTaskExistKeyword);
+
+        mockMvc.perform(get("/api/tasks/keyword?keyword=" + keywordExist))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", Matchers.hasSize(2)))
-                .andExpect(jsonPath("$[0].id", Matchers.equalTo(task1.getId())))
-                .andExpect(jsonPath("$[0].title", Matchers.equalTo("learn java framework")))
-                .andExpect(jsonPath("$[0].description", Matchers.equalTo("learn java spring")))
-                .andExpect(jsonPath("$[1].id", Matchers.equalTo(task2.getId())))
-                .andExpect(jsonPath("$[1].title", Matchers.equalTo("learn english")))
-                .andExpect(jsonPath("$[1].description", Matchers.equalTo("learn english word")));
+                .andExpect(jsonPath("$", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$[0].id", Matchers.equalTo(listTaskExistKeyword.get(0).getId())))
+                .andExpect(jsonPath("$[0].title", Matchers.equalTo(listTaskExistKeyword.get(0).getTitle())))
+                .andExpect(
+                        jsonPath("$[0].description",
+                                Matchers.equalTo(listTaskExistKeyword.get(0).getDescription()))
+                );
     }
 
     @Test
     public void test_getByKeyword_NotFound() throws Exception {
-        mockMvc.perform(get("/api/tasks/keyword?keyword=not_exist"))
-                .andDo(print())
+        String keywordNotExist = "ooo";
+        List<Task> emptyList = new ArrayList<>();
+
+        when(taskService.findByKeyword(keywordNotExist)).thenReturn(emptyList);
+
+        mockMvc.perform(get("/api/tasks/keyword?keyword=" + keywordNotExist))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", Matchers.hasSize(0)));
     }
 
-    @Nested
-    class TestPost {
-        Task task = new Task(0, "do homework", "do exercise");
-
-        @Test
-        public void test_post() throws Exception {
-            Gson gson = new Gson();
-            String json = gson.toJson(task);
-
-            mockMvc.perform(post("/api/tasks/")
-                    .content(json)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON))
-                    .andDo(print())
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.title", Matchers.equalTo("do homework")))
-                    .andExpect(jsonPath("$.description", Matchers.equalTo("do exercise")));
-        }
-
-        @AfterEach
-        public void afterEach() {
-            taskServiceImpl.deleteTask(taskServiceImpl.findByKeyword("do homework").get(0).getId());
-        }
-    }
-
     @Test
-    public void test_put_Found() throws Exception {
-        Gson gson = new Gson();
-        String json = gson.toJson(new Task(task1.getId(), "learn math", "learn sum sub"));
+    public void test_post() throws Exception {
+        Task taskToPost = Task.builder().title("do homework").description("do exercise").build();
+        Task taskReturn = Task.builder().id(2).title("do homework").description("do exercise").build();
 
-        mockMvc.perform(put("/api/tasks/" + task1.getId())
+        when(taskService.saveTask(taskToPost)).thenReturn(taskReturn);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(taskToPost);
+
+        mockMvc.perform(post("/api/tasks/")
                 .content(json)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", Matchers.equalTo(task1.getId())))
-                .andExpect(jsonPath("$.title", Matchers.equalTo("learn math")))
-                .andExpect(jsonPath("$.description", Matchers.equalTo("learn sum sub")));
+                .andExpect(jsonPath("$.id", Matchers.equalTo(taskReturn.getId())))
+                .andExpect(jsonPath("$.title", Matchers.equalTo(taskReturn.getTitle())))
+                .andExpect(jsonPath("$.description", Matchers.equalTo(taskReturn.getDescription())));
     }
 
     @Test
-    public void test_put_NotFound() throws Exception {
-        Gson gson = new Gson();
-        String json = gson.toJson(new Task(task1.getId(), "learn math", "learn sum sub"));
+    public void test_put_Found() throws Exception {
+        Task taskToPut = Task.builder().title("do homework").description("do exercise").build();
+        Task taskReturn = Task.builder().id(2).title("do homework").description("do exercise").build();
 
-        mockMvc.perform(put("/api/tasks/" + 99999)
+        when(taskService.updateTask(idExist, taskToPut)).thenReturn(taskReturn);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(taskToPut);
+
+        mockMvc.perform(put("/api/tasks/" + idExist)
                 .content(json)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", Matchers.equalTo(taskReturn.getId())))
+                .andExpect(jsonPath("$.title", Matchers.equalTo(taskReturn.getTitle())))
+                .andExpect(jsonPath("$.description", Matchers.equalTo(taskReturn.getDescription())));
     }
 
-    @Nested
-    class TestDelete {
-        Task taskToDelete;
+    @Test
+    public void test_put_NotFound() throws Exception {
+        Task taskToPut = Task.builder().title("do homework").description("do exercise").build();
 
-        @BeforeEach
-        public void beforeEach() {
-            taskToDelete = new Task(0, "task to delete", "not thing");
-            taskServiceImpl.saveTask(taskToDelete);
-            taskToDelete.setId(taskServiceImpl.findByKeyword("task to delete").get(0).getId());
-        }
+        when(taskService.updateTask(idNotExist, taskToPut)).thenThrow(new NotFoundException(messageIdNotExist));
 
-        @Test
-        public void test_delete_Found() throws Exception {
-            mockMvc.perform(delete("/api/tasks/" + taskToDelete.getId()))
-                    .andExpect(status().isOk())
-                    .andDo(print())
-                    .andExpect(status().isOk())
-                    .andExpect(content().string(String.valueOf(taskToDelete.getId())));
-        }
+        Gson gson = new Gson();
+        String json = gson.toJson(taskToPut);
 
-        @Test
-        public void test_delete_NotFound() throws Exception {
-            mockMvc.perform(delete("/api/tasks/9999999"))
-                    .andExpect(status().isNotFound());
-        }
+        mockMvc.perform(put("/api/tasks/" + idNotExist)
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NotFoundException))
+                .andExpect(result -> assertEquals(messageIdNotExist, result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    public void test_delete_Found() throws Exception {
+        when(taskService.deleteTask(idExist)).thenReturn(idExist);
+
+        mockMvc.perform(delete("/api/tasks/" + idExist))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().string(String.valueOf(idExist)));
+    }
+
+    @Test
+    public void test_delete_NotFound() throws Exception {
+        when(taskService.deleteTask(idNotExist)).thenThrow(new NotFoundException(messageIdNotExist));
+
+        mockMvc.perform(delete("/api/tasks/" + idNotExist))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NotFoundException))
+                .andExpect(result -> assertEquals(messageIdNotExist, result.getResolvedException().getMessage()));
     }
 
 }
