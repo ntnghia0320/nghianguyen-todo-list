@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 @Data
 @Entity
@@ -20,9 +22,13 @@ public class Task {
     private int id;
 
     @Column(name = "title")
+    @NotNull
     private String title;
 
     @Column(name = "description")
     private String description;
 
+    @Column(name = "done_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date doneAt;
 }

@@ -5,6 +5,7 @@ import com.ntnghia.task.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -15,32 +16,32 @@ public class TaskController {
     private TaskService taskService;
 
     @GetMapping()
-    List<Task> getAll() {
+    public List<Task> getAll() {
         return taskService.getAll();
     }
 
     @GetMapping("/{id}")
-    Task getById(@PathVariable int id) {
+    public Task getById(@PathVariable int id) {
         return taskService.findById(id);
     }
 
     @GetMapping("/search")
-    List<Task> getByKeyword(@RequestParam String keyword) {
+    public List<Task> getByKeyword(@RequestParam String keyword) {
         return taskService.findByKeyword(keyword);
     }
 
     @PostMapping()
-    Task post(@RequestBody Task task) {
+    public Task post(@Valid @RequestBody Task task) {
         return taskService.saveTask(task);
     }
 
     @PutMapping("/{id}")
-    Task put(@PathVariable int id, @RequestBody Task task) {
+    public Task put(@Valid @PathVariable int id, @RequestBody Task task) {
         return taskService.updateTask(id, task);
     }
 
     @DeleteMapping("/{id}")
-    int delete(@PathVariable int id) {
+    public int delete(@PathVariable int id) {
         return taskService.deleteTask(id);
     }
 }

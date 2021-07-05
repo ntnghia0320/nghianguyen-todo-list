@@ -19,6 +19,8 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +53,7 @@ public class TaskServiceImplTest {
         idExist = 2;
         idNotExist = 999;
         messageIdNotExist = "Task id 999 not found";
-        taskReturnExpected = new Task(0, "learn english", "learn word");
+        taskReturnExpected = Task.builder().id(0).title("learn english").description("learn english word").build();
         listTaskReturnExpected = new ArrayList<>(Collections.singletonList(taskReturnExpected));
 
         when(taskRepositoryMock.existsById(idExist)).thenReturn(true);
@@ -118,13 +120,15 @@ public class TaskServiceImplTest {
 
     @Test
     public void test_updateTask() {
-        Task taskToUpdate = Task.builder().title("learn english").description("learn word").build();
+        Task taskToUpdate = Task.builder().id(0).title("learn math").description("learn sum").build();
 
-        when(taskRepositoryMock.save(taskToUpdate)).thenReturn(taskReturnExpected);
+        when(taskRepositoryMock.save(taskToUpdate)).thenReturn(taskToUpdate);
+        when(taskRepositoryMock.findByTitleAndDescription(anyString(), anyString())).thenReturn(null);
+        when(taskRepositoryMock.findById(anyInt())).thenReturn(Optional.ofNullable(taskReturnExpected));
 
         Task taskUpdated = taskService.updateTask(idExist, taskToUpdate);
 
-        assertEquals(taskReturnExpected, taskUpdated);
+        assertEquals(taskToUpdate, taskUpdated);
     }
 
     @Test

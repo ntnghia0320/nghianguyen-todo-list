@@ -49,7 +49,7 @@ public class TaskControllerTest {
         idExist = 2;
         idNotExist = 999;
         messageIdNotExist = "Task id 999 not found";
-        taskReturnExpected = new Task(0, "learn english", "learn word");
+        taskReturnExpected = Task.builder().id(0).title("learn english").description("learn english word").build();
         listTaskReturnExpected = new ArrayList<>(Collections.singletonList(taskReturnExpected));
     }
 
