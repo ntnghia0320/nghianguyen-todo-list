@@ -8,7 +8,6 @@ import org.springframework.test.context.TestPropertySource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application-test.properties")
 class TaskApplicationTests {
 
     @Value("${spring.datasource.url}")
@@ -20,7 +19,7 @@ class TaskApplicationTests {
 
     @Test
     public void test_dataSourceUrl() {
-        assertEquals(dataSourceUrl, "jdbc:mysql://localhost:3306/task_test");
+        assertEquals(dataSourceUrl, "jdbc:mysql://localhost:3306/task");
     }
 
 }
