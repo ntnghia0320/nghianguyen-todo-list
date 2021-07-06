@@ -19,12 +19,13 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Data
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 class ErrorModel {
-    private String message;
+    private List<String> message;
     private String path;
 }
 
@@ -34,13 +35,17 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorModel> handleNotFoundException(NotFoundException ex, ServletWebRequest request) {
         return new ResponseEntity<>(
-                new ErrorModel(ex.getMessage(), request.getRequest().getRequestURI()), HttpStatus.NOT_FOUND);
+                new ErrorModel(Collections.singletonList(ex.getMessage()),
+                        request.getRequest().getRequestURI()),
+                HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorModel> handleBadRequestException(BadRequestException ex, ServletWebRequest request) {
         return new ResponseEntity<>(
-                new ErrorModel(ex.getMessage(), request.getRequest().getRequestURI()), HttpStatus.BAD_REQUEST);
+                new ErrorModel(Collections.singletonList(ex.getMessage()),
+                        request.getRequest().getRequestURI()),
+                HttpStatus.BAD_REQUEST);
     }
 
     @Override
@@ -51,32 +56,11 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
         for (final FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.add(error.getField() + ": " + error.getDefaultMessage());
         }
-        for (final ObjectError error : ex.getBindingResult().getGlobalErrors()) {
-            errors.add(error.getObjectName() + ": " + error.getDefaultMessage());
-        }
-        final ErrorModel errorModel = new ErrorModel(errors.toString(), ex.getLocalizedMessage());
-        return handleExceptionInternal(ex, errorModel, headers, HttpStatus.BAD_REQUEST, request);
-    }
 
-    @Override
-    protected ResponseEntity<Object> handleMissingServletRequestParameter(
-            MissingServletRequestParameterException ex, HttpHeaders headers,
-            HttpStatus status, WebRequest request) {
-        String error = ex.getParameterName() + " parameter is missing";
-
-        final ErrorModel errorModel = new ErrorModel(error, ex.getLocalizedMessage());
-        return handleExceptionInternal(ex, errorModel, headers, HttpStatus.BAD_REQUEST, request);
-    }
-
-    @ExceptionHandler({MethodArgumentTypeMismatchException.class})
-    public ResponseEntity<Object> handleMethodArgumentTypeMismatch(
-            MethodArgumentTypeMismatchException ex, WebRequest request) {
-        String error =
-                ex.getName() + " should be of type " + ex.getRequiredType().getName();
-
-        final ErrorModel errorModel = new ErrorModel(error, ex.getLocalizedMessage());
         return new ResponseEntity<>(
-                new ErrorModel(errorModel.getMessage(), errorModel.getPath()), HttpStatus.NOT_FOUND);
+                new ErrorModel(errors,
+                        ((ServletWebRequest) request).getRequest().getRequestURI()),
+                HttpStatus.BAD_REQUEST);
     }
 
     @Override
@@ -87,12 +71,12 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
             WebRequest request) {
         StringBuilder builder = new StringBuilder();
         builder.append(ex.getMethod());
-        builder.append(
-                " method is not supported for this request. Supported methods are ");
+        builder.append(" method is not supported for this request. Supported methods are ");
         ex.getSupportedHttpMethods().forEach(t -> builder.append(t + " "));
 
-        final ErrorModel errorModel = new ErrorModel(builder.toString(), ex.getLocalizedMessage());
         return new ResponseEntity<>(
-                new ErrorModel(errorModel.getMessage(), errorModel.getPath()), HttpStatus.METHOD_NOT_ALLOWED);
+                new ErrorModel(Collections.singletonList(builder.toString()),
+                        ((ServletWebRequest) request).getRequest().getRequestURI()),
+                HttpStatus.METHOD_NOT_ALLOWED);
     }
 }
