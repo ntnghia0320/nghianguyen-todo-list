@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
@@ -21,14 +22,15 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
-    @Column(name = "title")
+    @Column()
     @NotNull
+    @NotEmpty
     private String title;
 
-    @Column(name = "description")
+    @Column()
     private String description;
 
-    @Column(name = "done_at")
+    @Column()
     @Temporal(TemporalType.TIMESTAMP)
     private Date doneAt;
 }

@@ -1,9 +1,13 @@
 package com.ntnghia.task.controller;
 
 import com.ntnghia.task.entity.Task;
+import com.ntnghia.task.exception.BadRequestException;
+import com.ntnghia.task.exception.NotFoundException;
 import com.ntnghia.task.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -36,7 +40,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public Task put(@Valid @PathVariable int id, @RequestBody Task task) {
+    public Task put(@PathVariable int id, @Valid @RequestBody Task task) {
         return taskService.updateTask(id, task);
     }
 

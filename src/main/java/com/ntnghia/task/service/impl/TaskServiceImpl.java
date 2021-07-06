@@ -1,6 +1,7 @@
 package com.ntnghia.task.service.impl;
 
 import com.ntnghia.task.entity.Task;
+import com.ntnghia.task.exception.BadRequestException;
 import com.ntnghia.task.exception.NotFoundException;
 import com.ntnghia.task.repository.TaskRepository;
 import com.ntnghia.task.service.TaskService;
@@ -21,7 +22,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task findById(int id) {
-        if (taskRepository.findById(id).isPresent()) return taskRepository.findById(id).get();
+        if (isIdExist(id)) return taskRepository.findById(id).get();
 
         throw new NotFoundException(String.format("Task id %d not found", id));
     }
@@ -30,30 +31,28 @@ public class TaskServiceImpl implements TaskService {
     public List<Task> findByKeyword(String keyword) {
         if (!keyword.isEmpty()) return taskRepository.findByKeyword(keyword);
 
-        throw new NotFoundException("Key word empty");
+        throw new BadRequestException("Key word empty");
     }
 
     @Override
-    public Task saveTask(Task task) {
-        if (task.getTitle().isEmpty()) {
-            throw new NotFoundException("Empty Title");
-        } else if (taskRepository.findByTitleAndDescription(task.getTitle(), task.getDescription()) == null) {
+    public Task saveTask(Task task) throws NotFoundException {
+        if (!isTaskExist(task)) {
             return taskRepository.save(task);
         }
 
-        throw new NotFoundException("Task duplicate");
+        throw new BadRequestException("Task duplicate");
     }
 
     @Override
     public Task updateTask(int id, Task task) {
-        if (taskRepository.existsById(id)) {
+        if (isIdExist(id)) {
             Task taskOld = taskRepository.findById(id).get();
-            if (task.getTitle().isEmpty()) {
-                throw new NotFoundException("Empty Title");
-            } else if (taskOld.getTitle().equals(task.getTitle()) || taskOld.getDescription().equals(task.getDescription())) {
-                throw new NotFoundException("Task not change");
-            } else if (taskRepository.findByTitleAndDescription(task.getTitle(), task.getDescription()) != null) {
-                throw new NotFoundException("Task duplicate");
+            if (taskOld.getTitle().equals(task.getTitle())
+                    && taskOld.getDescription().equals(task.getDescription())
+                    && taskOld.getDoneAt().equals(task.getDoneAt())) {
+                throw new BadRequestException("Task not change");
+            } else if (isTaskExist(task)) {
+                throw new BadRequestException("Task duplicate");
             } else {
                 task.setId(id);
                 return taskRepository.save(task);
@@ -65,7 +64,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public int deleteTask(int id) {
-        if (taskRepository.existsById(id)) {
+        if (isIdExist(id)) {
             taskRepository.deleteById(id);
             return id;
         }
@@ -73,4 +72,11 @@ public class TaskServiceImpl implements TaskService {
         throw new NotFoundException(String.format("Task id %d not found", id));
     }
 
+    private boolean isTaskExist(Task task) {
+        return taskRepository.findByTitleAndDescription(task.getTitle(), task.getDescription()) != null;
+    }
+
+    private boolean isIdExist(int id) {
+        return taskRepository.existsById(id);
+    }
 }
