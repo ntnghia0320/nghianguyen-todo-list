@@ -88,7 +88,8 @@ public class TaskServiceImplTest {
     @Test
     public void test_findByKeyword() {
         String keywordExist = "learn";
-        when(taskRepositoryMock.findByKeyword(keywordExist)).thenReturn(listTaskReturnExpected);
+        when(taskRepositoryMock.findByTitleContainsOrDescriptionContains(keywordExist, keywordExist))
+                .thenReturn(listTaskReturnExpected);
 
         List<Task> listTaskFoundActual = taskService.findByKeyword(keywordExist);
 
@@ -100,7 +101,8 @@ public class TaskServiceImplTest {
         List<Task> emptyList = new ArrayList<>();
         String keywordNotExist = "not_exist";
 
-        when(taskRepositoryMock.findByKeyword(keywordNotExist)).thenReturn(emptyList);
+        when(taskRepositoryMock.findByTitleContainsOrDescriptionContains(keywordNotExist, keywordNotExist))
+                .thenReturn(emptyList);
 
         List<Task> listTaskFound = taskService.findByKeyword(keywordNotExist);
 

@@ -1,13 +1,9 @@
 package com.ntnghia.task.controller;
 
 import com.ntnghia.task.entity.Task;
-import com.ntnghia.task.exception.BadRequestException;
-import com.ntnghia.task.exception.NotFoundException;
 import com.ntnghia.task.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.util.List;

@@ -22,14 +22,31 @@ public class TaskRepositoryTest {
     @BeforeEach
     public void beforeEach() {
         task = Task.builder().title("learn english").description("learn english word").build();
+        task = taskRepository.save(task);
     }
 
     @Test
-    public void test_findByKeyword() {
-        task = taskRepository.save(task);
+    public void test_findByTitleContainsOrDescriptionContains() {
+        assertTrue(
+                taskRepository.findByTitleContainsOrDescriptionContains(
+                        "xxxx",
+                        "yyy").isEmpty());
 
-        assertNotNull(taskRepository.findById(task.getId()));
-        assertTrue(taskRepository.findByKeyword("xxxxbc").isEmpty());
+        assertFalse(
+                taskRepository.findByTitleContainsOrDescriptionContains(
+                        "learn english",
+                        "yyy").isEmpty());
+    }
+
+    @Test
+    public void test_findByTitleAndDescription() {
+        assertEquals(taskRepository.findByTitleAndDescription(
+                "learn english",
+                "learn english word"), task);
+
+        assertNotEquals(taskRepository.findByTitleAndDescription(
+                "learn english 2",
+                "learn english word"), task);
     }
 
     @AfterEach

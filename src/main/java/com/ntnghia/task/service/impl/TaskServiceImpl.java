@@ -29,7 +29,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<Task> findByKeyword(String keyword) {
-        if (!keyword.isEmpty()) return taskRepository.findByKeyword(keyword);
+        if (!keyword.isEmpty()) return taskRepository.findByTitleContainsOrDescriptionContains(keyword, keyword);
 
         throw new BadRequestException("Key word empty");
     }
